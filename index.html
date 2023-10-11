@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ajedrez</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, 60px);
+      grid-gap: 0;
+      width: 480px;
+      height: 480px;
+    }
+    .square {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #eee;
+      position: relative;
+      border: 1px solid #000;
+    }
+    .square.black {
+      background-color: #999;
+    }
+    .piece {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .highlight {
+      background-color: yellow;
+      opacity: 0.6;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="board" id="chessboard">
+    <!-- Casillas generadas dinámicamente -->
+  </div>
+  <script>
+    const board = document.getElementById("chessboard");
+    let selectedPiece = null;
+    let isWhiteTurn = true;
+
+    function createChessboard() {
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          const square = document.createElement("div");
+          square.className = "square";
+          if ((row + col) % 2 === 1) {
+            square.classList.add("black");
+          }
+          square.addEventListener("dragover", (e) => {
+            e.preventDefault();
+          });
+          square.addEventListener("drop", onDrop);
+          square.dataset.row = row;
+          square.dataset.col = col;
+          board.appendChild(square);
+        }
+      }
+      setupChessPieces();
+    }
+
+    function setupChessPieces() {
+      const startingPosition = [
+        "rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"
+      ];
+
+      for (let col = 0; col < 8; col++) {
+        createPiece("pawn", 1, col, "black");
+        createPiece(startingPosition[col], 0, col, "black");
+        createPiece("pawn", 6, col, "white");
+        createPiece(startingPosition[col], 7, col, "white");
+      }
+    }
+
+    function createPiece(type, row, col, color) {
+      const piece = document.createElement("img");
+      piece.src = `pieces/${type}_${color}.png`;
+      piece.className = "piece";
+      piece.draggable = true;
+      piece.dataset.color = color;
+      piece.dataset.type = type;
+      piece.dataset.row = row;
+      piece.dataset.col = col;
+      piece.addEventListener("dragstart", onDragStart);
+      document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`).appendChild(piece);
+    }
+
+    function onDragStart(e) {
+      selectedPiece = e.target;
+    }
+
+    function onDrop(e) {
+      const targetSquare = e.target;
+      if (isMoveValid(selectedPiece, targetSquare)) {
+        targetSquare.appendChild(selectedPiece);
+        e.preventDefault();
+        selectedPiece = null;
+        isWhiteTurn = !isWhiteTurn;
+      }
+    }
+
+    function isMoveValid(piece, targetSquare) {
+      const type = piece.dataset.type;
+      const color = piece.dataset.color;
+      const row = parseInt(piece.dataset.row);
+      const col = parseInt(piece.dataset.col);
+      const targetRow = parseInt(targetSquare.dataset.row);
+      const targetCol = parseInt(targetSquare.dataset.col);
+
+      // Lógica de movimiento para peones
+      if (type === "pawn") {
+        if (color === "white") {
+          if (row - targetRow === 1 && Math.abs(col - targetCol) === 0) {
+            return true;
+          } else if (row === 6 && row - targetRow === 2 && Math.abs(col - targetCol) === 0) {
+            return true;
+          }
+        } else if (color === "black") {
+          if (targetRow - row === 1 && Math.abs(col - targetCol) === 0) {
+            return true;
+          } else if (row === 1 && targetRow - row === 2 && Math.abs(col - targetCol) === 0) {
+            return true;
+          }
+        }
+      }
+      // Agrega más lógica de movimiento para otras piezas aquí
+
+      return false;
+    }
+
+    createChessboard();
+  </script>
+</body>
+</html>
